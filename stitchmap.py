@@ -4,15 +4,15 @@ from functools import reduce
 from argparse import ArgumentParser
 from os import path
 
-ALL_TOWERS_ACTIVATED: int = 0b111111111111111 #15 bits
-ALL_CHANGES_TRIGGERED: int = 0b111111 #6 bits
+ALL_REGIONS_VISIBLE: int = 0b111111111111111 #15 bits
+ALL_MODIFICATIONS_TRIGGERED: int = 0b111111 #6 bits
 NUM_COLUMNS: int = 12
 NUM_ROWS: int = 10
 ELDIN_BRIDGE_VISIBILITY_BIT = 0b000001000000000
 TARREY_TOWN_VISIBILITY_BIT =  0b000010000000000
 
-regionBitmasks = None
-extrasBitmasks = None
+regionsVisibleBitmasks = None
+modificationsTriggeredBitmasks = None
 
 def getTileInfo(filename: str):
     #remove extension
@@ -22,29 +22,29 @@ def getTileInfo(filename: str):
     col: int = ord(loc[0]) - ord('A')
     row: int = int(loc[2])
 
-    regionVisibilityFlags: int = None
-    otherMapFlags: int = None
+    tileRegionsVisibleFlags: int = None
+    tileModificationsTriggeredFlags: int = None
     if(len(underscoreparts) > 2):
         flagparts = underscoreparts[2].split('-')
         if(len(flagparts) > 1):
-            regionVisibilityFlags = int(flagparts[0])
-            otherMapFlags = int(flagparts[1])
+            tileRegionsVisibleFlags = int(flagparts[0])
+            tileModificationsTriggeredFlags = int(flagparts[1])
         else:
-            regionVisibilityFlags = int(underscoreparts[2])
-            otherMapFlags = 0
+            tileRegionsVisibleFlags = int(underscoreparts[2])
+            tileModificationsTriggeredFlags = 0
     else:
-        if(regionBitmasks == None):
-            regionVisibilityFlags = None
+        if(regionsVisibleBitmasks == None):
+            tileRegionsVisibleFlags = None
         else:
-            regionVisibilityFlags = regionBitmasks[col][row]
+            tileRegionsVisibleFlags = regionsVisibleBitmasks[col][row]
 
-        possibleOtherFlags: str = underscoreparts[1][4:]
-        if(possibleOtherFlags != "" and possibleOtherFlags != None):
-            otherMapFlags = int(possibleOtherFlags)
+        possibleModsTriggeredFlags: str = underscoreparts[1][4:]
+        if(possibleModsTriggeredFlags != "" and possibleModsTriggeredFlags != None):
+            tileModificationsTriggeredFlags = int(possibleModsTriggeredFlags)
         else:
-            otherMapFlags = 0
+            tileModificationsTriggeredFlags = 0
 
-    return (col, row, regionVisibilityFlags, otherMapFlags)
+    return (col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags)
 
 def make2DDict(initialValue = None):
     tiles = {}
@@ -63,16 +63,16 @@ def getOrReturnNone(bitmasks, col, row) -> int:
 def hasSingleFlag(bm) -> bool:
     return bm != 0 and ((bm & (bm - 1)) == 0)
 
-def getRegionBitMasks(folderpath: str):
+def getRegionsVisibileBitmasks(folderpath: str):
     bitmasks = make2DDict(None)
     for filename in listdir(folderpath):
         if(filename.endswith(".png")):
-            col, row, regionVisibilityFlags, otherMapFlags = getTileInfo(filename)
-            if(regionVisibilityFlags == None):
+            col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
+            if(tileRegionsVisibleFlags == None):
                 continue
             if(bitmasks[col][row] == None):
                 bitmasks[col][row] = 0
-            bitmasks[col][row] |= int(regionVisibilityFlags)
+            bitmasks[col][row] |= int(tileRegionsVisibleFlags)
     
     nonesStillExist = True
     while(nonesStillExist):
@@ -93,13 +93,13 @@ def getRegionBitMasks(folderpath: str):
 
     return bitmasks
 
-def getExtrasBitMasks(folderpath: str):
+def getModificationsTriggeredBitmasks(folderpath: str):
     bitmasks = make2DDict(initialValue=0)
 
     for filename in listdir(folderpath):
         if(filename.endswith(".png")):
-            col, row, regionVisibilityFlags, otherMapFlags = getTileInfo(filename)
-            bitmasks[col][row] |= otherMapFlags
+            col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
+            bitmasks[col][row] |= tileModificationsTriggeredFlags
     return bitmasks
 
 def stitchAndSave(tiles, filename):
@@ -112,26 +112,26 @@ def stitchAndSave(tiles, filename):
     
     fullMap.save(filename, "PNG")
 
-def searchDir(dirPath: str, tileArray, activatedTowerFlags: int, otherFlags: int):
+def searchDir(dirPath: str, tileArray, regionsVisibleFlags: int, modificationsTriggeredFlags: int):
     for filename in listdir(dirPath):
         if(filename.endswith(".png")):
-            col, row, regionVisibilityFlags, otherMapFlags = getTileInfo(filename)
+            col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
             if(tileArray[col][row] == None):
-                mask = regionBitmasks[col][row]
-                if((mask & regionVisibilityFlags) == (mask & activatedTowerFlags)):
-                    extrasMask = extrasBitmasks[col][row]
-                    if((extrasMask & otherMapFlags) == (extrasMask & otherFlags)):
+                regionMask = regionsVisibleBitmasks[col][row]
+                if((regionMask & tileRegionsVisibleFlags) == (regionMask & regionsVisibleFlags)):
+                    modsMask = modificationsTriggeredBitmasks[col][row]
+                    if((modsMask & tileModificationsTriggeredFlags) == (modsMask & modificationsTriggeredFlags)):
                         tileArray[col][row] = Image.open(dirPath + "/" + filename)
 
 def main():
     parser = ArgumentParser()
     parser.add_argument("folder")
-    parser.add_argument("-o", "--output", dest="outputImageName", default="output",
+    parser.add_argument("-o", "--output", dest="outputImageName", default="output.png",
                         help="save generated image to FILE.", metavar="FILE")
     parser.add_argument("-l", "--lod", dest="lod", default=0, type=int,
                         help="Level of detail of the output image, from 0 (highest) to 3 (lowest).")
-    parser.add_argument("-a", "--towers", dest="towersActivated", default="111111111111111", type=str,
-                        help="a series of 15 1s or 0s indicating which towers have been activated",
+    parser.add_argument("-r", "--regions", dest="regionsVisible", default="111111111111111", type=str,
+                        help="a series of 15 1s or 0s indicating which regions are visible (i.e. which towers have been activated)",
                         metavar="NNNNNNNNNNNNNNN")
     parser.add_argument("-t", "--tarreytown", dest="ttState", default=5, type=int,
                         help="State of Tarrey Town, from 0 (nonexistent) to 5 (fully built)", metavar="STATE")
@@ -150,23 +150,23 @@ def main():
     if(not outputFilename.endswith(".png")):
         outputFilename += ".png"
 
-    towerFlags = int(args.towersActivated, 2)
-    otherFlags = 0
+    regionsVisibleFlags = int(args.regionsVisible, 2)
+    modificationsTriggeredFlags = 0
     if(args.bridgeState == "down"):
-        otherFlags |= 0b100000
+        modificationsTriggeredFlags |= 0b100000
     if(args.ttState != 0):
         for i in range(0, args.ttState):
-            otherFlags |= (0b1 << i)
+            modificationsTriggeredFlags |= (0b1 << i)
 
-    if((towerFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
-        otherFlags &= 0b011111
-    if((towerFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
-        otherFlags &= 0b100000
+    if((regionsVisibleFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
+        modificationsTriggeredFlags &= 0b011111
+    if((regionsVisibleFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
+        modificationsTriggeredFlags &= 0b100000
 
-    global regionBitmasks
-    global extrasBitmasks
-    regionBitmasks = getRegionBitMasks(fullpath)
-    extrasBitmasks = getExtrasBitMasks(fullpath)
+    global regionsVisibleBitmasks
+    global modificationsTriggeredBitmasks
+    regionsVisibleBitmasks = getRegionsVisibileBitmasks(fullpath)
+    modificationsTriggeredBitmasks = getModificationsTriggeredBitmasks(fullpath)
 
     #for col in range(0, NUM_COLUMNS):
     #    for row in range(0, NUM_ROWS):
@@ -178,9 +178,9 @@ def main():
 
     tiles = make2DDict()
 
-    searchDir(fullpath, tiles, towerFlags, otherFlags)
-    searchDir(fullpath + "/Empty", tiles, towerFlags, otherFlags)
-    searchDir(fullpath + "/Full", tiles, towerFlags, otherFlags)
+    searchDir(fullpath, tiles, regionsVisibleFlags, modificationsTriggeredFlags)
+    searchDir(fullpath + "/Empty", tiles, regionsVisibleFlags, modificationsTriggeredFlags)
+    searchDir(fullpath + "/Full", tiles, regionsVisibleFlags, modificationsTriggeredFlags)
 
     stitchAndSave(tiles, outputFilename)
 
