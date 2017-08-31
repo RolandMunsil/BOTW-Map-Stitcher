@@ -46,6 +46,75 @@ def getTileInfo(filename: str):
 
     return (col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags)
 
+#
+#
+# Code used to generate the flagmasks.txt file
+# In short, it figures out bitmasks from the variations of tiles with variations,
+# and to figure out the rest it uses a basic fill algorithm (since the tiles with
+# variations are essentially "edges"
+#
+#
+#def getOrReturnNone(bitmasks, col, row) -> int:
+#    if(col < 0 or row < 0 or col >= NUM_COLUMNS or row >= NUM_ROWS):
+#        return None
+#    else:
+#        return bitmasks[col][row]
+
+#def hasSingleFlag(bm) -> bool:
+#    return bm != 0 and ((bm & (bm - 1)) == 0)
+
+#def calculateRegionsVisibileBitmasks(folderpath: str):
+#    bitmasks = make2DDict(None)
+#    for filename in listdir(folderpath):
+#        if(filename.endswith(".png")):
+#            col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
+#            if(tileRegionsVisibleFlags == None):
+#                continue
+#            if(bitmasks[col][row] == None):
+#                bitmasks[col][row] = 0
+#            bitmasks[col][row] |= int(tileRegionsVisibleFlags)
+    
+#    nonesStillExist = True
+#    while(nonesStillExist):
+#        nonesStillExist = False
+#        for col in range(0, NUM_COLUMNS):
+#            for row in range(0, NUM_ROWS):
+#                if(bitmasks[col][row] == None):
+#                    nonesStillExist = True
+#                    # get masks for surrounding tiles
+#                    surroundingMasks = [getOrReturnNone(bitmasks, c, r) for c in range(col-1,col+2) for r in range(row-1,row+2)]
+#                    # remove nones
+#                    surroundingMasksFiltered = list(filter(None, surroundingMasks))
+#                    if(len(surroundingMasksFiltered) > 0):
+#                        #try to find common single bit
+#                        commonBits = reduce(lambda b1, b2: b1 & b2, surroundingMasksFiltered)
+#                        if(hasSingleFlag(commonBits)):
+#                            bitmasks[col][row] = commonBits
+
+#    return bitmasks
+
+#def calculateModificationsTriggeredBitmasks(folderpath: str):
+#    bitmasks = make2DDict(initialValue=0)
+
+#    for filename in listdir(folderpath):
+#        if(filename.endswith(".png")):
+#            col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
+#            bitmasks[col][row] |= tileModificationsTriggeredFlags
+#    return bitmasks
+
+#def generateBitmasksFile():
+#    regionsVisibleBitmasks = getRegionsVisibileBitmasks(fullpath)
+#    modificationsTriggeredBitmasks = getModificationsTriggeredBitmasks(fullpath)
+
+#    flagmasksfile = open("flagmasks.txt","w+")
+#    for col in range(0, NUM_COLUMNS):
+#        for row in range(0, NUM_ROWS):
+#            c = chr(ord('A') + col)
+#            r = "{:0>15b}".format(regionsVisibleBitmasks[col][row])
+#            e = "{:0>6b}".format(modificationsTriggeredBitmasks[col][row])
+#            flagmasksfile.write(f"{c}-{row} {r} {e}\n")
+#    flagmasksfile.close()
+
 def make2DDict(initialValue = None):
     tiles = {}
     for col in range(0, NUM_COLUMNS):
@@ -54,53 +123,24 @@ def make2DDict(initialValue = None):
             tiles[col][row] = initialValue
     return tiles
 
-def getOrReturnNone(bitmasks, col, row) -> int:
-    if(col < 0 or row < 0 or col >= NUM_COLUMNS or row >= NUM_ROWS):
-        return None
-    else:
-        return bitmasks[col][row]
+def loadBitmasks():
+    global regionsVisibleBitmasks
+    global modificationsTriggeredBitmasks
+    regionsVisibleBitmasks = make2DDict(initialValue=0)
+    modificationsTriggeredBitmasks = make2DDict(initialValue=0)
 
-def hasSingleFlag(bm) -> bool:
-    return bm != 0 and ((bm & (bm - 1)) == 0)
+    flagmasksfile = open("flagmasks.txt","r")
+    for line in flagmasksfile:
+            parts = line.split(" ")
 
-def getRegionsVisibileBitmasks(folderpath: str):
-    bitmasks = make2DDict(None)
-    for filename in listdir(folderpath):
-        if(filename.endswith(".png")):
-            col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
-            if(tileRegionsVisibleFlags == None):
-                continue
-            if(bitmasks[col][row] == None):
-                bitmasks[col][row] = 0
-            bitmasks[col][row] |= int(tileRegionsVisibleFlags)
-    
-    nonesStillExist = True
-    while(nonesStillExist):
-        nonesStillExist = False
-        for col in range(0, NUM_COLUMNS):
-            for row in range(0, NUM_ROWS):
-                if(bitmasks[col][row] == None):
-                    nonesStillExist = True
-                    # get masks for surrounding tiles
-                    surroundingMasks = [getOrReturnNone(bitmasks, c, r) for c in range(col-1,col+2) for r in range(row-1,row+2)]
-                    # remove nones
-                    surroundingMasksFiltered = list(filter(None, surroundingMasks))
-                    if(len(surroundingMasksFiltered) > 0):
-                        #try to find common single bit
-                        commonBits = reduce(lambda b1, b2: b1 & b2, surroundingMasksFiltered)
-                        if(hasSingleFlag(commonBits)):
-                            bitmasks[col][row] = commonBits
+            col = ord(parts[0][0]) - ord('A')
+            row = int(parts[0][2])
+            rMask = int(parts[1], 2)
+            mMask = int(parts[2], 2)
 
-    return bitmasks
-
-def getModificationsTriggeredBitmasks(folderpath: str):
-    bitmasks = make2DDict(initialValue=0)
-
-    for filename in listdir(folderpath):
-        if(filename.endswith(".png")):
-            col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
-            bitmasks[col][row] |= tileModificationsTriggeredFlags
-    return bitmasks
+            regionsVisibleBitmasks[col][row] = rMask
+            modificationsTriggeredBitmasks[col][row] = mMask
+    flagmasksfile.close()
 
 def stitchAndSave(tiles, filename):
     missingtiles = False
@@ -196,20 +236,7 @@ def main():
     if((regionsVisibleFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
         modificationsTriggeredFlags &= 0b100000
 
-    global regionsVisibleBitmasks
-    global modificationsTriggeredBitmasks
-    regionsVisibleBitmasks = getRegionsVisibileBitmasks(fullpath)
-    modificationsTriggeredBitmasks = getModificationsTriggeredBitmasks(fullpath)
-
-    #flagmasksfile = open("flagmasks.txt","w+")
-    #for col in range(0, NUM_COLUMNS):
-    #    for row in range(0, NUM_ROWS):
-    #        c = chr(ord('A') + col)
-    #        r = "{:0>15b}".format(regionsVisibleBitmasks[col][row])
-    #        e = "{:0>6b}".format(modificationsTriggeredBitmasks[col][row])
-    #        flagmasksfile.write(f"{c}-{row} {r} {e}\n")
-    #flagmasksfile.close()
-    
+    loadBitmasks()
 
     tiles = make2DDict()
 
