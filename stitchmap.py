@@ -1,19 +1,20 @@
 from PIL import Image
 from os import listdir
 from functools import reduce
+from argparse import ArgumentParser
+from os import path
 
-ALL_REGIONS_UNLOCKED: int = 0b111111111111111 #15 bits
+ALL_TOWERS_ACTIVATED: int = 0b111111111111111 #15 bits
+ALL_CHANGES_TRIGGERED: int = 0b111111 #6 bits
 NUM_COLUMNS: int = 12
 NUM_ROWS: int = 10
+ELDIN_BRIDGE_VISIBILITY_BIT = 0b000001000000000
+TARREY_TOWN_VISIBILITY_BIT =  0b000010000000000
+
 regionBitmasks = None
 extrasBitmasks = None
 
-basePath: str = "Legend of Zelda - Breath of the Wild"
-unlockedRegions: int = 0b111111111111111
-mapFlags: int = 0b100011
-lod: int = 1
-
-def getTileInfo(filename: str, ):
+def getTileInfo(filename: str):
     #remove extension
     filename = filename.split('.')[0]
     underscoreparts = filename.split('_')
@@ -101,7 +102,7 @@ def getExtrasBitMasks(folderpath: str):
             bitmasks[col][row] |= otherMapFlags
     return bitmasks
 
-def stitchAndSave(tiles):
+def stitchAndSave(tiles, filename):
     patchDim = tiles[0][0].width
     fullMap = Image.new('RGB', (patchDim * NUM_COLUMNS, patchDim * NUM_ROWS))
     
@@ -109,37 +110,78 @@ def stitchAndSave(tiles):
         for row in range(0, NUM_ROWS):
             fullMap.paste(im=tiles[col][row], box=(col * patchDim, row * patchDim))
     
-    fullMap.save("stitched.png", "PNG")
+    fullMap.save(filename, "PNG")
 
-def searchDir(dirPath: str, tileArray):
+def searchDir(dirPath: str, tileArray, activatedTowerFlags: int, otherFlags: int):
     for filename in listdir(dirPath):
         if(filename.endswith(".png")):
             col, row, regionVisibilityFlags, otherMapFlags = getTileInfo(filename)
             if(tileArray[col][row] == None):
                 mask = regionBitmasks[col][row]
-                if((mask & regionVisibilityFlags) == (mask & unlockedRegions)):
+                if((mask & regionVisibilityFlags) == (mask & activatedTowerFlags)):
                     extrasMask = extrasBitmasks[col][row]
-                    if((extrasMask & otherMapFlags) == (extrasMask & mapFlags)):
+                    if((extrasMask & otherMapFlags) == (extrasMask & otherFlags)):
                         tileArray[col][row] = Image.open(dirPath + "/" + filename)
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument("folder")
+    parser.add_argument("-o", "--output", dest="outputImageName", default="output",
+                        help="save generated image to FILE.", metavar="FILE")
+    parser.add_argument("-l", "--lod", dest="lod", default=0, type=int,
+                        help="Level of detail of the output image, from 0 (highest) to 3 (lowest).")
+    parser.add_argument("-a", "--towers", dest="towersActivated", default="111111111111111", type=str,
+                        help="a series of 15 1s or 0s indicating which towers have been activated",
+                        metavar="NNNNNNNNNNNNNNN")
+    parser.add_argument("-t", "--tarreytown", dest="ttState", default=5, type=int,
+                        help="State of Tarrey Town, from 0 (nonexistent) to 5 (fully built)", metavar="STATE")
+    parser.add_argument("-b", "--bridge", dest="bridgeState", choices=["up", "down"], default="down",
+                        help="State of the Eldin Bridge (up or down)")
+
+    args = parser.parse_args()
+
     fullpath = ""
-    if(lod == 0):
-        fullpath = basePath + "/Map"
+    if(args.lod == 0):
+        fullpath = path.join(args.folder, "Map")
     else:
-        fullpath = basePath + "/Map" + str(lod)
+        fullpath = path.join(args.folder, "Map" + str(args.lod))
+
+    outputFilename = args.outputImageName
+    if(not outputFilename.endswith(".png")):
+        outputFilename += ".png"
+
+    towerFlags = int(args.towersActivated, 2)
+    otherFlags = 0
+    if(args.bridgeState == "down"):
+        otherFlags |= 0b100000
+    if(args.ttState != 0):
+        for i in range(0, args.ttState):
+            otherFlags |= (0b1 << i)
+
+    if((towerFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
+        otherFlags &= 0b011111
+    if((towerFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
+        otherFlags &= 0b100000
 
     global regionBitmasks
     global extrasBitmasks
     regionBitmasks = getRegionBitMasks(fullpath)
     extrasBitmasks = getExtrasBitMasks(fullpath)
 
+    #for col in range(0, NUM_COLUMNS):
+    #    for row in range(0, NUM_ROWS):
+    #        c = chr(ord('A') + col)
+    #        r = "{:0>15b}".format(regionBitmasks[col][row])
+    #        e = "{:0>6b}".format(extrasBitmasks[col][row])
+    #        print(f"{c}-{row} | {r} | {e}")
+
+
     tiles = make2DDict()
 
-    searchDir(fullpath, tiles)
-    searchDir(fullpath + "/Empty", tiles)
-    searchDir(fullpath + "/Full", tiles)
+    searchDir(fullpath, tiles, towerFlags, otherFlags)
+    searchDir(fullpath + "/Empty", tiles, towerFlags, otherFlags)
+    searchDir(fullpath + "/Full", tiles, towerFlags, otherFlags)
 
-    stitchAndSave(tiles)
+    stitchAndSave(tiles, outputFilename)
 
 main()
