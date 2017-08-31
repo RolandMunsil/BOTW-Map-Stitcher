@@ -239,10 +239,10 @@ def main():
         for i in range(0, args.ttState):
             modificationsTriggeredFlags |= (0b1 << i)
 
-    if((regionsVisibleFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
-        modificationsTriggeredFlags &= 0b011111
     if((regionsVisibleFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
-        modificationsTriggeredFlags &= 0b100000
+        modificationsTriggeredFlags &= ~0b100000
+    if((regionsVisibleFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
+        modificationsTriggeredFlags &= ~0b011111
 
     #Print summary
     print("Paramaters being used:")
