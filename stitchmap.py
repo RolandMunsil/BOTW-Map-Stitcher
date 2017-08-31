@@ -1,8 +1,9 @@
 from PIL import Image
 from os import listdir
+from os import path
 from functools import reduce
 from argparse import ArgumentParser
-from os import path
+
 
 ALL_REGIONS_VISIBLE: int = 0b111111111111111 #15 bits
 ALL_MODIFICATIONS_TRIGGERED: int = 0b111111 #6 bits
@@ -157,7 +158,8 @@ def stitchAndSave(tiles, filename):
     fullMap = Image.new('RGB', (patchDim * NUM_COLUMNS, patchDim * NUM_ROWS))
     
     for col in range(0, NUM_COLUMNS):
-        print(f"Stitching column {col}")
+        colchar = chr(ord('A') + col)
+        print(f"Stitching column {colchar}")
         for row in range(0, NUM_ROWS):
             fullMap.paste(im=tiles[col][row], box=(col * patchDim, row * patchDim))
     
@@ -191,7 +193,7 @@ def main():
     parser.add_argument("-b", "--bridge", dest="bridgeState", choices=["up", "down"], default="down",
                         help="State of the Eldin Bridge (up or down)")
 
-    args = parser.parse_args(["../Legend of Zelda - Breath of the Wild"])
+    args = parser.parse_args()
 
     #folder path
     if(not path.exists(args.folder)):
@@ -231,10 +233,40 @@ def main():
         for i in range(0, args.ttState):
             modificationsTriggeredFlags |= (0b1 << i)
 
-    if((regionsVisibleFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
-        modificationsTriggeredFlags &= 0b011111
     if((regionsVisibleFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
+        modificationsTriggeredFlags &= 0b011111
+    if((regionsVisibleFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
         modificationsTriggeredFlags &= 0b100000
+
+    #Print summary
+    print("Paramaters being used:")
+    if(args.lod == 0):
+        print(f"Level of detail: 0 (highest)")
+    elif(args.lod == 3):
+        print(f"Level of detail: 3 (lowest)")
+    else:
+        print(f"Level of detail: {args.lod}")
+
+    if(regionsVisibleFlags == ALL_REGIONS_VISIBLE):
+        print("All regions visible")
+    elif(regionsVisibleFlags == 0):
+        print("No regions visible")
+    else:
+        print(f"Regions visible: {args.regionsVisible}")
+
+    if((regionsVisibleFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
+        print("Tarrey Town is not visible")
+    elif(args.ttState == 5):
+        print("Tarrey Town is complete")
+    elif(args.ttState == 0):
+        print("Tarrey Town has not begun being built")
+    else:
+        print(f"Tarrey Town is in state {args.ttState}")
+
+    if((regionsVisibleFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
+        print("Eldin bridge is not visible")
+    else:
+        print(f"Eldin bridge is {args.bridgeState}")
 
     loadBitmasks()
 
