@@ -185,8 +185,8 @@ def main():
                         help="save generated image to FILE.", metavar="FILE")
     parser.add_argument("-l", "--lod", dest="lod", default=0, type=int,
                         help="Level of detail of the output image, from 0 (highest) to 3 (lowest).")
-    parser.add_argument("-r", "--regions", dest="regionsVisible", default="111111111111111", type=str,
-                        help="a series of 15 1s or 0s indicating which regions are visible (i.e. which towers have been activated)",
+    parser.add_argument("-r", "--regions", dest="regionsVisible", default="all", type=str,
+                        help="a series of 15 1s or 0s indicating which regions are visible (i.e. which towers have been activated). You can also use the aliases \"all\" or \"none\"",
                         metavar="NNNNNNNNNNNNNNN")
     parser.add_argument("-t", "--tarreytown", dest="ttState", default=5, type=int,
                         help="State of Tarrey Town, from 0 (nonexistent) to 5 (fully built)", metavar="STATE")
@@ -225,7 +225,13 @@ def main():
         outputFilename += ".png"
 
     # flags
-    regionsVisibleFlags = int(args.regionsVisible, 2)
+    regVisString = args.regionsVisible
+    if(regVisString == "all"):
+        regVisString = "111111111111111"
+    elif(regVisString == "none"):
+        regVisString ="000000000000000"
+
+    regionsVisibleFlags = int(regVisString, 2)
     modificationsTriggeredFlags = 0
     if(args.bridgeState == "down"):
         modificationsTriggeredFlags |= 0b100000
