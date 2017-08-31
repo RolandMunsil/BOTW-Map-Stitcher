@@ -103,14 +103,27 @@ def getModificationsTriggeredBitmasks(folderpath: str):
     return bitmasks
 
 def stitchAndSave(tiles, filename):
+    missingtiles = False
+    for col in range(0, NUM_COLUMNS):
+        for row in range(0, NUM_ROWS):
+            if(tiles[col][row] == None):
+                colLetter = chr(ord('A') + col)
+                print(f"ERROR: you are missing the required tile for column {colLetter}, row {row}")
+                missingtiles = True
+    if(missingtiles):
+        exit()
+
     patchDim = tiles[0][0].width
     fullMap = Image.new('RGB', (patchDim * NUM_COLUMNS, patchDim * NUM_ROWS))
     
     for col in range(0, NUM_COLUMNS):
+        print(f"Stitching column {col}")
         for row in range(0, NUM_ROWS):
             fullMap.paste(im=tiles[col][row], box=(col * patchDim, row * patchDim))
     
+    print("Saving image... (this could take a while if you've selected a high level of detail)")
     fullMap.save(filename, "PNG")
+    print("Finished!")
 
 def searchDir(dirPath: str, tileArray, regionsVisibleFlags: int, modificationsTriggeredFlags: int):
     for filename in listdir(dirPath):
@@ -138,7 +151,21 @@ def main():
     parser.add_argument("-b", "--bridge", dest="bridgeState", choices=["up", "down"], default="down",
                         help="State of the Eldin Bridge (up or down)")
 
-    args = parser.parse_args()
+    args = parser.parse_args(["../Legend of Zelda - Breath of the Wild"])
+
+    #folder path
+    if(not path.exists(args.folder)):
+        print(f"ERROR: folder \"{args.folder}\" does not exist.")
+        exit()
+
+    hasMapFolder = False
+    for filename in listdir(args.folder):
+        if(filename == "Map" or filename == "Map1" or
+           filename == "Map2" or filename == "Map3"):
+            hasMapFolder = True
+    if(not hasMapFolder):
+        print("ERROR: Invalid folder selection. Folder should contain at least one of the following folders: Map, Map1, Map2, Map3")
+        exit()
 
     fullpath = ""
     if(args.lod == 0):
@@ -146,10 +173,16 @@ def main():
     else:
         fullpath = path.join(args.folder, "Map" + str(args.lod))
 
+    if(not path.exists(fullpath)):
+        print(f"ERROR: You do not have the correct files for level of detail {args.lod}.")
+        exit()
+
+    # output
     outputFilename = args.outputImageName
     if(not outputFilename.endswith(".png")):
         outputFilename += ".png"
 
+    # flags
     regionsVisibleFlags = int(args.regionsVisible, 2)
     modificationsTriggeredFlags = 0
     if(args.bridgeState == "down"):
@@ -168,19 +201,23 @@ def main():
     regionsVisibleBitmasks = getRegionsVisibileBitmasks(fullpath)
     modificationsTriggeredBitmasks = getModificationsTriggeredBitmasks(fullpath)
 
+    #flagmasksfile = open("flagmasks.txt","w+")
     #for col in range(0, NUM_COLUMNS):
     #    for row in range(0, NUM_ROWS):
     #        c = chr(ord('A') + col)
-    #        r = "{:0>15b}".format(regionBitmasks[col][row])
-    #        e = "{:0>6b}".format(extrasBitmasks[col][row])
-    #        print(f"{c}-{row} | {r} | {e}")
-
+    #        r = "{:0>15b}".format(regionsVisibleBitmasks[col][row])
+    #        e = "{:0>6b}".format(modificationsTriggeredBitmasks[col][row])
+    #        flagmasksfile.write(f"{c}-{row} {r} {e}\n")
+    #flagmasksfile.close()
+    
 
     tiles = make2DDict()
 
     searchDir(fullpath, tiles, regionsVisibleFlags, modificationsTriggeredFlags)
-    searchDir(fullpath + "/Empty", tiles, regionsVisibleFlags, modificationsTriggeredFlags)
-    searchDir(fullpath + "/Full", tiles, regionsVisibleFlags, modificationsTriggeredFlags)
+    if(path.exists(fullpath + "/Empty")):
+        searchDir(fullpath + "/Empty", tiles, regionsVisibleFlags, modificationsTriggeredFlags)
+    if(path.exists(fullpath + "/Full")):
+        searchDir(fullpath + "/Full", tiles, regionsVisibleFlags, modificationsTriggeredFlags)
 
     stitchAndSave(tiles, outputFilename)
 
