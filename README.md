@@ -52,6 +52,54 @@ For more details on the parameters, see the "Argument Details" section. However,
   * Full-quality empty map (just the blue background pattern) `<folder> -l0 -r none`
   * Lower-quality empty map (just the blue background pattern) `<folder> -l1 -r none`
  
- # Argument Details
- TODO
- 
+# Argument Details
+#### `-o, --output <filename>`
+Saves the generated image to `<filename>`. If this argument is not specified, the image will be saved to "output.png".
+
+#### `-l, --lod <number>`
+Specifies the level of detail (aka quality) of the generated image. 0 is the lowest, and 3 is the highest. Note that you need the "Map (Full)" archive for LOD 0, and the "Map (Lower-Resolution)" archive for LODs 1-3.
+
+The image sizes for each level of detail are as follows:
+
+| LOD | Dimensions (px) | File Size (approx.) |
+| --- | --------------- | -------------------:|
+| 0   | 24,000 x 20,000 |           \~150 MiB |
+| 1   | 6720 x 5600     |            \~17 MiB |
+| 2   | 2400 x 2000     |             \~3 MiB |
+| 3   | 1080 x 900      |           \~800 KiB |
+
+If this argument is not specified, it will default to 0 (highest quality).
+
+#### `-r, --regions <regions visible>`
+Specifies the regions that are visible on this map (you could also think of it as specifying the towers that have been activated).
+There are two special values for `<regions visible>`: "all" for a complete map, and "none" for an empty map. If you want a specific
+combination of regions, you need to enter a sequence of 1s and 0s where each digit represents a region. For example, if you want all regions except the Hebra and Great Plateau to be visible, you would set the argument like this `-r 111111110111110`.
+
+The tower for each of the digits is as follows:
+ * `nnnnnnnnnnnnnn1`: Hebra Tower
+ * `nnnnnnnnnnnnn1n`: Tabantha Tower
+ * `nnnnnnnnnnnn1nn`: Gerudo Tower
+ * `nnnnnnnnnnn1nnn`: Wasteland Tower
+ * `nnnnnnnnnn1nnnn`: Woodland Tower
+ * `nnnnnnnnn1nnnnn`: Central Tower
+ * `nnnnnnnn1nnnnnn`: Great Plateau Tower
+ * `nnnnnnn1nnnnnnn`: Dueling Peaks Tower
+ * `nnnnnn1nnnnnnnn`: Lake Tower
+ * `nnnnn1nnnnnnnnn`: Eldin Tower
+ * `nnnn1nnnnnnnnnn`: Akkala Tower
+ * `nnn1nnnnnnnnnnn`: Lanayru Tower
+ * `nn1nnnnnnnnnnnn`: Hateno Tower
+ * `n1nnnnnnnnnnnnn`: Faron Tower
+ * `1nnnnnnnnnnnnnn`: Ridgeland Tower
+
+If this argument is not specified, it will default to all regions being visible.
+
+#### `-t, --tarreytown <number>`
+Specifies the state of Tarrey Town. In the game, the map will update to reflect the state of Tarrey Town, and there are a total of 6 states, from 0 (no houses) to 5 (complete). In the "Basic Use" section, you can see pictures of the 0 and 5 states.
+
+If this argument is not specified, it will default to 5 (complete).
+
+#### `-b, --bridge up/down`
+Specifies the state of Eldin Bridge. Like Tarrey Town, the map will update in-game to reflect the state of Eldin Bridge; it can be up or down. In the "Basic Use" section, you can see pictures of the two states.
+
+If this argument is not specified, it will default to down.
