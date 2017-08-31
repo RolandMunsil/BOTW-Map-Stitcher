@@ -4,6 +4,8 @@ extracted the images used to display the map in _Legend of Zelda: Breath of the 
 into square tiles, and there are also separate tile variations for different states of the map. 
 This Python 3 script stitches together the tiles into single images.
 
+![Map Stitcher](readmeimages/botw.jpg)
+
 # Basic Use
 First, make sure you have the actual map files (download [here](https://www.spriters-resource.com/wii_u/thelegendofzeldabreathofthewild/)).
 Depending on what you want to do, you don't need to download them all.
@@ -15,26 +17,25 @@ Depending on what you want to do, you don't need to download them all.
  * The Variants archives contain the additional tiles needed to make highest-quality maps with regions missing.
  * The "Map (Empty)" archive contains everything needed to make
    a completely empty map (i.e. just the background pattern and borders).
+
+(For reference, here is what I mean when I talk about Tarrey Town and Eldin Bridge:)
+<img src="readmeimages/diffs.png" width="600">
  
-**VERY IMPORTANT!!!**: Be sure to extract them all into the _same folder_. The files should be structured like this:
+**VERY IMPORTANT!!!**: Be sure to extract all of the archives into the _same folder_. The folder structure should look like this:
 ```
 Legend of Zelda - Breath of the Wild\
   Map\
     Empty\
     Full\
-    (346 PNGs)
   Map1\
     Empty\
     Full\
-    (346 PNGs)
   Map2\
     Empty\
     Full\
-    (346 PNGs)
   Map3\
     Empty\
     Full\
-    (346 PNGs)
 ```
  
 Finally, download the python script and flagmasks.txt. You can run the script like this:
