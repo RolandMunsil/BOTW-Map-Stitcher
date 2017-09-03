@@ -54,7 +54,7 @@ For more details on the parameters, see the "Argument Details" section. However,
 Saves the generated image to `<filename>`. If this argument is not specified, the image will be saved to "output.png".
 
 #### `-l, --lod <number>`
-Specifies the level of detail (aka quality) of the generated image. 0 is the lowest, and 3 is the highest. Note that you need the "Map (Full)" archive for LOD 0, and the "Map (Lower-Resolution)" archive for LODs 1-3.
+Specifies the level of detail (aka quality) of the generated image. 0 is the highest, and 3 is the lowest. Note that you need the "Map (Full)" archive for LOD 0, and the "Map (Lower-Resolution)" archive for LODs 1-3.
 
 The image sizes for each level of detail are as follows:
 
