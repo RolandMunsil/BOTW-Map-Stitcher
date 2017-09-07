@@ -167,7 +167,7 @@ def stitchAndSave(tiles, filename):
     fullMap.save(filename, "PNG")
     print("Finished!")
 
-def searchDir(dirPath: str, tileArray, regionsVisibleFlags: int, modificationsTriggeredFlags: int):
+def searchDir(dirPath, tileArray, regionsVisibleFlags, modificationsTriggeredFlags):
     for filename in listdir(dirPath):
         if(filename.endswith(".png")):
             col, row, tileRegionsVisibleFlags, tileModificationsTriggeredFlags = getTileInfo(filename)
