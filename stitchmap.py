@@ -193,7 +193,7 @@ def main():
     parser.add_argument("-b", "--bridge", dest="bridgeState", choices=["up", "down"], default="down",
                         help="State of the Eldin Bridge (up or down)")
 
-    args = parser.parse_args(["../Legend of Zelda - Breath of the Wild"])
+    args = parser.parse_args()
 
     #folder path
     if(not path.exists(args.folder)):
