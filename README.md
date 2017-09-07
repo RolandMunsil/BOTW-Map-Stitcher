@@ -7,6 +7,8 @@ This Python 3 script stitches together the tiles into single images.
 ![Map Stitcher](readmeimages/botw.jpg)
 
 # Basic Use
+Note: This is a Python **3** script - it won't work if you try to run it using Python 2.
+
 First, make sure you have the actual map files (download [here](https://www.spriters-resource.com/wii_u/thelegendofzeldabreathofthewild/)).
 Depending on what you want to do, you don't need to download them all.
  * The "Map (Full)" archive contains everything needed to make a map at the highest quality (24,000x20,000 pixels) with all regions visible, although it will NOT have the complete Tarrey Town and Eldin Bridge will be up.
