@@ -149,7 +149,7 @@ def stitchAndSave(tiles, filename):
         for row in range(0, NUM_ROWS):
             if(tiles[col][row] == None):
                 colLetter = chr(ord('A') + col)
-                print(f"ERROR: you are missing the required tile for column {colLetter}, row {row}")
+                print("ERROR: you are missing the required tile for column " + str(colLetter) + ", row " + str(row))
                 missingtiles = True
     if(missingtiles):
         exit()
@@ -159,7 +159,7 @@ def stitchAndSave(tiles, filename):
     
     for col in range(0, NUM_COLUMNS):
         colchar = chr(ord('A') + col)
-        print(f"Stitching column {colchar}")
+        print("Stitching column " + colchar)
         for row in range(0, NUM_ROWS):
             fullMap.paste(im=tiles[col][row], box=(col * patchDim, row * patchDim))
     
@@ -193,11 +193,11 @@ def main():
     parser.add_argument("-b", "--bridge", dest="bridgeState", choices=["up", "down"], default="down",
                         help="State of the Eldin Bridge (up or down)")
 
-    args = parser.parse_args()
+    args = parser.parse_args(["../Legend of Zelda - Breath of the Wild"])
 
     #folder path
     if(not path.exists(args.folder)):
-        print(f"ERROR: folder \"{args.folder}\" does not exist.")
+        print("ERROR: folder \"" + args.folder + "\" does not exist.")
         exit()
 
     hasMapFolder = False
@@ -216,7 +216,7 @@ def main():
         fullpath = path.join(args.folder, "Map" + str(args.lod))
 
     if(not path.exists(fullpath)):
-        print(f"ERROR: You do not have the correct files for level of detail {args.lod}.")
+        print("ERROR: You do not have the correct files for level of detail " + str(args.lod) + ".")
         exit()
 
     # output
@@ -247,18 +247,18 @@ def main():
     #Print summary
     print("Paramaters being used:")
     if(args.lod == 0):
-        print(f"Level of detail: 0 (highest)")
+        print("Level of detail: 0 (highest)")
     elif(args.lod == 3):
-        print(f"Level of detail: 3 (lowest)")
+        print("Level of detail: 3 (lowest)")
     else:
-        print(f"Level of detail: {args.lod}")
+        print("Level of detail: " + str(args.lod))
 
     if(regionsVisibleFlags == ALL_REGIONS_VISIBLE):
         print("All regions visible")
     elif(regionsVisibleFlags == 0):
         print("No regions visible")
     else:
-        print(f"Regions visible: {args.regionsVisible}")
+        print("Regions visible: " + args.regionsVisible)
 
     if((regionsVisibleFlags & TARREY_TOWN_VISIBILITY_BIT) == 0):
         print("Tarrey Town is not visible")
@@ -267,12 +267,12 @@ def main():
     elif(args.ttState == 0):
         print("Tarrey Town has not begun being built")
     else:
-        print(f"Tarrey Town is in state {args.ttState}")
+        print("Tarrey Town is in state " + str(args.ttState))
 
     if((regionsVisibleFlags & ELDIN_BRIDGE_VISIBILITY_BIT) == 0):
         print("Eldin bridge is not visible")
     else:
-        print(f"Eldin bridge is {args.bridgeState}")
+        print("Eldin bridge is " + args.bridgeState)
 
     loadBitmasks()
 
