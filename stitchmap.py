@@ -5,26 +5,26 @@ from functools import reduce
 from argparse import ArgumentParser
 
 
-ALL_REGIONS_VISIBLE: int = 0b111111111111111 #15 bits
-ALL_MODIFICATIONS_TRIGGERED: int = 0b111111 #6 bits
-NUM_COLUMNS: int = 12
-NUM_ROWS: int = 10
+ALL_REGIONS_VISIBLE = 0b111111111111111 #15 bits
+ALL_MODIFICATIONS_TRIGGERED = 0b111111 #6 bits
+NUM_COLUMNS = 12
+NUM_ROWS = 10
 ELDIN_BRIDGE_VISIBILITY_BIT = 0b000001000000000
 TARREY_TOWN_VISIBILITY_BIT =  0b000010000000000
 
 regionsVisibleBitmasks = None
 modificationsTriggeredBitmasks = None
 
-def getTileInfo(filename: str):
+def getTileInfo(filename):
     #remove extension
     filename = filename.split('.')[0]
     underscoreparts = filename.split('_')
-    loc: str = underscoreparts[1][0:3]
-    col: int = ord(loc[0]) - ord('A')
-    row: int = int(loc[2])
+    loc = underscoreparts[1][0:3]
+    col = ord(loc[0]) - ord('A')
+    row = int(loc[2])
 
-    tileRegionsVisibleFlags: int = None
-    tileModificationsTriggeredFlags: int = None
+    tileRegionsVisibleFlags = None
+    tileModificationsTriggeredFlags = None
     if(len(underscoreparts) > 2):
         flagparts = underscoreparts[2].split('-')
         if(len(flagparts) > 1):
@@ -39,7 +39,7 @@ def getTileInfo(filename: str):
         else:
             tileRegionsVisibleFlags = regionsVisibleBitmasks[col][row]
 
-        possibleModsTriggeredFlags: str = underscoreparts[1][4:]
+        possibleModsTriggeredFlags = underscoreparts[1][4:]
         if(possibleModsTriggeredFlags != "" and possibleModsTriggeredFlags != None):
             tileModificationsTriggeredFlags = int(possibleModsTriggeredFlags)
         else:
@@ -64,7 +64,7 @@ def getTileInfo(filename: str):
 #def hasSingleFlag(bm) -> bool:
 #    return bm != 0 and ((bm & (bm - 1)) == 0)
 
-#def calculateRegionsVisibileBitmasks(folderpath: str):
+#def calculateRegionsVisibileBitmasks(folderpath):
 #    bitmasks = make2DDict(None)
 #    for filename in listdir(folderpath):
 #        if(filename.endswith(".png")):
@@ -94,7 +94,7 @@ def getTileInfo(filename: str):
 
 #    return bitmasks
 
-#def calculateModificationsTriggeredBitmasks(folderpath: str):
+#def calculateModificationsTriggeredBitmasks(folderpath):
 #    bitmasks = make2DDict(initialValue=0)
 
 #    for filename in listdir(folderpath):
